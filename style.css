@@ -43,11 +43,23 @@ html {
     border-radius: 5px;
 }
 
+#noteContent,
+#notePassword,
+#decryptPassword {
+    width: 100%;
+    margin-top: 10px;
+}
+
 #noteContent {
-    width: 300px;
     height: 150px;
 }
 
 button {
     margin-top: 10px;
+    margin-right: 5px;
+}
+
+#notePassword,
+#decryptPassword {
+    height: 30px;
 }

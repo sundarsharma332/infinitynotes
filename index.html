@@ -3,30 +3,44 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Infinite Canvas Notepad</title>
+    <title>Secure Infinite Canvas Notepad</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/jpeg" href="./fav.jpeg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
+
     <div class="toolbar">
         <input type="text" id="coordinateInput" placeholder="Enter coordinates (x,y)">
         <button id="goToCoordinate">Go To Coordinate</button>
         <button id="addNoteButton">Add Note</button>
     </div>
+
     <canvas id="notepadCanvas"></canvas>
 
     <!-- Note Editor Modal -->
     <div id="noteModal" class="modal">
         <div class="modal-content">
             <textarea id="noteContent" placeholder="Enter note content..."></textarea>
+            <input type="password" id="notePassword" placeholder="Enter a password">
             <button id="saveNote">Save</button>
             <button id="cancelNote">Cancel</button>
         </div>
     </div>
 
+    <!-- Password Prompt Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <p>Enter the password to decrypt the note:</p>
+            <input type="password" id="decryptPassword" placeholder="Password">
+            <button id="decryptNote">Decrypt</button>
+            <button id="cancelDecrypt">Cancel</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="app.js"></script>
 </body>
 

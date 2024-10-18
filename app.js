@@ -6,8 +6,14 @@ const goToCoordinateButton = document.getElementById('goToCoordinate');
 const addNoteButton = document.getElementById('addNoteButton');
 const noteModal = document.getElementById('noteModal');
 const noteContentInput = document.getElementById('noteContent');
+const notePasswordInput = document.getElementById('notePassword');
 const saveNoteButton = document.getElementById('saveNote');
 const cancelNoteButton = document.getElementById('cancelNote');
+
+const passwordModal = document.getElementById('passwordModal');
+const decryptPasswordInput = document.getElementById('decryptPassword');
+const decryptNoteButton = document.getElementById('decryptNote');
+const cancelDecryptButton = document.getElementById('cancelDecrypt');
 
 // Canvas transformation variables
 let offsetX = 0;
@@ -88,7 +94,13 @@ function drawNote(note) {
     ctx.strokeRect(note.x, note.y, 150, 100);
     ctx.fillStyle = '#000';
     ctx.font = '14px Arial';
-    wrapText(ctx, note.content, note.x + 10, note.y + 20, 130, 16);
+
+    // If the note is encrypted, display placeholder text
+    if (note.isEncrypted) {
+        ctx.fillText('[Encrypted Note]', note.x + 10, note.y + 50);
+    } else {
+        wrapText(ctx, note.content, note.x + 10, note.y + 20, 130, 16);
+    }
 }
 
 // Text wrapping function
@@ -181,7 +193,9 @@ canvas.addEventListener('click', function (e) {
         const pos = screenToWorld(e.clientX, e.clientY);
         const clickedNote = notes.find(note => pos.x >= note.x && pos.x <= note.x + 150 && pos.y >= note.y && pos.y <= note.y + 100);
         if (clickedNote) {
-            if (!clickedNote.locked) {
+            if (clickedNote.isEncrypted) {
+                promptForPassword(clickedNote);
+            } else if (!clickedNote.locked) {
                 editNote(clickedNote);
             } else {
                 alert('This note is locked.');
@@ -194,6 +208,7 @@ canvas.addEventListener('click', function (e) {
 function openNoteModal() {
     noteModal.style.display = 'flex';
     noteContentInput.value = '';
+    notePasswordInput.value = '';
 }
 
 function closeNoteModal() {
@@ -202,13 +217,21 @@ function closeNoteModal() {
 
 saveNoteButton.addEventListener('click', function () {
     const content = noteContentInput.value.trim();
+    const password = notePasswordInput.value;
     if (content) {
+        let encryptedContent = content;
+        let isEncrypted = false;
+        if (password) {
+            encryptedContent = CryptoJS.AES.encrypt(content, password).toString();
+            isEncrypted = true;
+        }
         notes.push({
             id: Date.now(),
             x: newNotePosition.x,
             y: newNotePosition.y,
-            content: content,
-            locked: false
+            content: encryptedContent,
+            locked: false,
+            isEncrypted: isEncrypted
         });
         saveNotes();
         draw();
@@ -220,15 +243,53 @@ cancelNoteButton.addEventListener('click', function () {
     closeNoteModal();
 });
 
+// Password prompt modal functions
+function promptForPassword(note) {
+    passwordModal.style.display = 'flex';
+    decryptPasswordInput.value = '';
+    decryptNoteButton.onclick = function () {
+        const password = decryptPasswordInput.value;
+        try {
+            const decrypted = CryptoJS.AES.decrypt(note.content, password).toString(CryptoJS.enc.Utf8);
+            if (!decrypted) throw new Error('Invalid password');
+            note.content = decrypted;
+            note.isEncrypted = false;
+            saveNotes();
+            draw();
+            passwordModal.style.display = 'none';
+            editNote(note);
+        } catch (err) {
+            alert('Incorrect password.');
+        }
+    };
+    cancelDecryptButton.onclick = function () {
+        passwordModal.style.display = 'none';
+    };
+}
+
 // Edit note function
 function editNote(note) {
     noteModal.style.display = 'flex';
     noteContentInput.value = note.content;
+    notePasswordInput.value = '';
+    notePasswordInput.placeholder = 'Leave blank to keep current encryption';
 
     saveNoteButton.onclick = function () {
         const content = noteContentInput.value.trim();
+        const password = notePasswordInput.value;
         if (content) {
-            note.content = content;
+            let encryptedContent = content;
+            let isEncrypted = false;
+            if (password) {
+                encryptedContent = CryptoJS.AES.encrypt(content, password).toString();
+                isEncrypted = true;
+            } else if (note.isEncrypted) {
+                // Re-encrypt with the same password
+                encryptedContent = CryptoJS.AES.encrypt(content, decryptPasswordInput.value).toString();
+                isEncrypted = true;
+            }
+            note.content = encryptedContent;
+            note.isEncrypted = isEncrypted;
             saveNotes();
             draw();
         }
@@ -246,13 +307,21 @@ function editNote(note) {
 function resetSaveButton() {
     saveNoteButton.onclick = function () {
         const content = noteContentInput.value.trim();
+        const password = notePasswordInput.value;
         if (content) {
+            let encryptedContent = content;
+            let isEncrypted = false;
+            if (password) {
+                encryptedContent = CryptoJS.AES.encrypt(content, password).toString();
+                isEncrypted = true;
+            }
             notes.push({
                 id: Date.now(),
                 x: newNotePosition.x,
                 y: newNotePosition.y,
-                content: content,
-                locked: false
+                content: encryptedContent,
+                locked: false,
+                isEncrypted: isEncrypted
             });
             saveNotes();
             draw();
