@@ -1,6 +1,9 @@
-body {
+body,
+html {
     margin: 0;
+    padding: 0;
     overflow: hidden;
+    height: 100%;
     font-family: Arial, sans-serif;
 }
 
@@ -16,6 +19,8 @@ body {
 
 #notepadCanvas {
     display: block;
+    width: 100vw;
+    height: 100vh;
     background-color: #f0f0f0;
 }
 
@@ -29,6 +34,7 @@ body {
     backdrop-filter: blur(3px);
     justify-content: center;
     align-items: center;
+    z-index: 20;
 }
 
 .modal-content {

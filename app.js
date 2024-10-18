@@ -10,8 +10,8 @@ const saveNoteButton = document.getElementById('saveNote');
 const cancelNoteButton = document.getElementById('cancelNote');
 
 // Canvas transformation variables
-let offsetX = canvas.width / 2;
-let offsetY = canvas.height / 2;
+let offsetX = 0;
+let offsetY = 0;
 let scale = 1;
 
 // Notes array
@@ -28,6 +28,13 @@ function loadNotes() {
 // Save notes to session storage
 function saveNotes() {
     sessionStorage.setItem('notes', JSON.stringify(notes));
+}
+
+// Resize canvas to fit window
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    draw();
 }
 
 // Draw canvas content
@@ -49,21 +56,26 @@ function draw() {
 
 // Draw grid lines
 function drawGrid() {
-    const gridSize = 50;
+    const gridSize = 100;
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 0.5;
 
-    for (let x = -offsetX / scale - canvas.width / (2 * scale); x < canvas.width / scale + offsetX / scale; x += gridSize) {
+    const left = (-offsetX - canvas.width) / scale;
+    const right = (-offsetX + canvas.width * 2) / scale;
+    const top = (-offsetY - canvas.height) / scale;
+    const bottom = (-offsetY + canvas.height * 2) / scale;
+
+    for (let x = left - (left % gridSize); x < right; x += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(x, -offsetY / scale - canvas.height / (2 * scale));
-        ctx.lineTo(x, canvas.height / scale + offsetY / scale);
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
         ctx.stroke();
     }
 
-    for (let y = -offsetY / scale - canvas.height / (2 * scale); y < canvas.height / scale + offsetY / scale; y += gridSize) {
+    for (let y = top - (top % gridSize); y < bottom; y += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(-offsetX / scale - canvas.width / (2 * scale), y);
-        ctx.lineTo(canvas.width / scale + offsetX / scale, y);
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
         ctx.stroke();
     }
 }
@@ -131,6 +143,10 @@ canvas.addEventListener('mousemove', function (e) {
 });
 
 canvas.addEventListener('mouseup', function () {
+    isDragging = false;
+});
+
+canvas.addEventListener('mouseleave', function () {
     isDragging = false;
 });
 
@@ -263,9 +279,14 @@ goToCoordinateButton.addEventListener('click', function () {
     }
 });
 
+// Handle window resize
+window.addEventListener('resize', function () {
+    resizeCanvas();
+});
+
 // Initialize
 loadNotes();
-draw();
+resizeCanvas();
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function (e) {
